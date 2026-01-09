@@ -1,0 +1,20 @@
+{
+  "name": "566今天吃什么",
+  "short_name": "566的饭",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#fff0f5",
+  "theme_color": "#fff0f5",
+  "icons": [
+    {
+      "src": "https://api.iconify.design/noto:heart-decoration.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "https://api.iconify.design/noto:heart-decoration.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}

@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>宝宝大人的可爱手帐</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#fff0f5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="宝宝手帐">
+    <link rel="apple-touch-icon" href="https://api.iconify.design/noto:heart-decoration.svg">
+    <style>
+        /* === 🍬 调色盘 (V7.1 原版) === */
+        :root { 
+            --primary: #ff80ab; --primary-dark: #f06292;
+            --bg-color: #fff0f5; --card-bg: #ffffff;
+            --text: #5d4037; --accent: #ffb74d; --danger: #ef9a9a;
+            --safe: #4fc3f7;
+        }
+
+        body { 
+            font-family: "YouYuan", "Microsoft YaHei", "Segoe UI", sans-serif;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(#f8bbd0 2px, transparent 2px);
+            background-size: 20px 20px;
+            color: var(--text); margin: 0; padding: 20px; 
+            min-height: 100vh; 
+            /* 防止手机端左右晃动 */
+            overflow-x: hidden; 
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* 布局容器 */
+        .container { display: flex; flex-wrap: wrap; gap: 25px; max-width: 1200px; margin: 0 auto; align-items: flex-start; }
+        .left-panel { flex: 1; min-width: 340px; } 
+        .right-panel { flex: 1.5; min-width: 360px; }
+        @media (max-width: 850px) { .left-panel, .right-panel { flex: 100%; min-width: 100%; } }
+
+        /* 卡片 */
+        .card { 
+            background: var(--card-bg); padding: 20px; 
+            border-radius: 20px; 
+            box-shadow: 0 8px 20px rgba(255, 128, 171, 0.15); 
+            margin-bottom: 20px; border: 2px solid #fff;
+            position: relative;
+        }
+        
+        h3 { 
+            color: var(--primary-dark); margin-top: 0; 
+            border-bottom: 2px dashed #ffcdd2; 
+            padding-bottom: 10px; font-size: 1.2em; 
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        /* 输入框 */
+        .input-row { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+        input, select { 
+            padding: 10px; border: 2px solid #fce4ec; border-radius: 12px; 
+            flex: 1; outline: none; color: var(--text); transition: 0.3s;
+            min-width: 60px; background: #fffbfb;
+        }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255, 128, 171, 0.2); }
+
+        /* 按钮 */
+        button { cursor: pointer; border: none; border-radius: 12px; font-weight: bold; transition: 0.2s; padding: 10px 15px; font-family: inherit; }
+        button:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        
+        .btn-buy { background: linear-gradient(135deg, #a5d6a7, #66bb6a); color: white; width: 100%; text-shadow: 1px 1px 0 rgba(0,0,0,0.1); }
+        .btn-cook { background: linear-gradient(135deg, #ffcc80, #ffa726); color: white; width: 100%; font-size: 1.1em; padding: 12px; margin-top: 10px; text-shadow: 1px 1px 0 rgba(0,0,0,0.1); }
+        .btn-add { background: #f8bbd0; color: #880e4f; font-size: 0.8em; padding: 5px 12px; }
+        .btn-del-mini { background: #ffcdd2; color: #c62828; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-left: 8px; flex-shrink: 0; box-shadow: 1px 1px 3px rgba(0,0,0,0.1); }
+
+        .btn-backup { background: linear-gradient(135deg, #81d4fa, #29b6f6); color: white; flex: 1; text-shadow: 1px 1px 0 rgba(0,0,0,0.1); }
+        .btn-restore { background: #e0f7fa; color: #0277bd; flex: 1; border: 2px dashed #29b6f6; }
+
+        .ing-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; background: #fff8e1; padding: 8px; border-radius: 12px; flex-wrap: wrap; }
+        .stock-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 5px; border-bottom: 1px dashed #fce4ec; color: #6d4c41; }
+        .log-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f3e5f5; margin-bottom: 8px; border-radius: 12px; font-size: 0.9em; }
+
+        /* 日历 */
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: #fff0f5; padding: 12px; border-radius: 15px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+        .day-cell { background: white; min-height: 100px; padding: 5px; border-radius: 15px; border: 2px solid #fce4ec; font-size: 0.9em; transition: 0.2s; }
+        .day-cell:hover { border-color: var(--primary); transform: scale(1.02); }
+        .day-cell.today { border: 2px solid var(--primary); background: #fff8e1; position: relative; }
+        .day-cell.today::after { content: "❤️"; position: absolute; top: 2px; right: 5px; font-size: 12px; }
+        .day-num { font-weight: bold; color: #d7ccc8; margin-bottom: 5px; font-family: sans-serif; }
+        .day-cell.today .day-num { color: var(--primary); }
+        
+        .dish-tag { display: block; padding: 3px 8px; margin-bottom: 4px; border-radius: 8px; font-size: 0.8em; cursor: help; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: white; text-shadow: 0 1px 0 rgba(0,0,0,0.1); }
+        .meal-breakfast { background: #90caf9; } .meal-lunch { background: #ffcc80; } .meal-dinner { background: #ce93d8; }
+
+        .footer-status { text-align: center; color: var(--primary); font-size: 0.8em; margin-top: 30px; padding-bottom: 20px; opacity: 0.6; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="left-panel">
+        
+        <div class="card">
+            <h3>🍓 进货啦 <span style="font-size:0.6em; color:#aaa; font-weight:normal; margin-left:auto;">(记得填单位哦)</span></h3>
+            <div class="input-row">
+                <input type="text" id="buyName" placeholder="买了好吃的..." list="historyList" style="flex:2">
+            </div>
+            <div class="input-row">
+                <input type="number" id="buyQty" placeholder="多少?" step="0.1">
+                <select id="buyUnit" style="flex:0.8">
+                    <option value="个">个</option> <option value="kg">kg</option> <option value="g">g</option>
+                    <option value="包">包</option> <option value="瓶">瓶</option> <option value="盒">盒</option> <option value="把">把</option>
+                </select>
+                <button class="btn-buy" onclick="doBuy()" style="flex:0.8">✨ 入库</button>
+            </div>
+            <datalist id="historyList"></datalist>
+        </div>
+
+        <div class="card" style="border: 3px solid var(--accent);">
+            <h3>🍯 小厨房 <span style="font-size:0.6em; color:#aaa; font-weight:normal; margin-left:auto;">(今天恰什么?)</span></h3>
+            <div class="input-row">
+                <input type="date" id="cookDate">
+                <select id="mealType">
+                    <option value="breakfast">🌤️ 早餐</option> <option value="lunch" selected>☀️ 午餐</option> <option value="dinner">🌙 晚餐</option>
+                </select>
+            </div>
+            <div class="input-row">
+                <input type="text" id="dishName" placeholder="比如: 豪华泡面 🍜">
+            </div>
+            <div style="display:flex; justify-content:space-between; margin:15px 0 5px 0;">
+                <span style="color:#8d6e63; font-size:0.9em;">🧂 消耗了哪些食材呀:</span>
+                <button class="btn-add" onclick="addIngRow()">+ 加一项</button>
+            </div>
+            <div id="ingList"></div> 
+            <button class="btn-cook" onclick="doCook()">💖 做好啦，开动！</button>
+        </div>
+
+        <div class="card">
+            <h3>🧊 冰箱宝库</h3>
+            <div id="stockList" style="max-height:180px; overflow-y:auto;"></div>
+            <div style="text-align:center; margin-top:10px; font-size:0.8em; color:#d7ccc8;">(点粉色小叉叉就能吃光光/删除哦)</div>
+        </div>
+
+        <div class="card">
+            <h3>📒 碎碎念流水账</h3>
+            <div id="mealLogList" style="max-height:150px; overflow-y:auto;"></div>
+        </div>
+
+        <div class="card" style="border: 2px dashed var(--safe);">
+            <h3>📂 数据保险箱 <span style="font-size:0.6em; color:#aaa; font-weight:normal; margin-left:auto;">(搬家/备份用这里)</span></h3>
+            <div class="input-row">
+                <button class="btn-backup" onclick="exportData()">⬇️ 备份/导出数据</button>
+                <button class="btn-restore" onclick="document.getElementById('fileInput').click()">⬆️ 恢复/导入数据</button>
+                <input type="file" id="fileInput" style="display:none" onchange="importData(this)">
+            </div>
+            <div style="font-size:0.8em; color:#90a4ae;">
+                * 电脑点“备份”发给手机，手机点“恢复”就能同步啦！
+            </div>
+        </div>
+    </div>
+
+    <div class="right-panel">
+        <div class="card">
+            <div class="calendar-header">
+                <button onclick="moveMonth(-1)">◀ 上月</button>
+                <h3 id="monthTitle" style="margin:0; border:none; color:var(--text);">...</h3>
+                <button onclick="moveMonth(1)">下月 ▶</button>
+            </div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+        </div>
+    </div>
+</div>
+
+<div class="footer-status" id="systemStatus">正在启动 PWA 引擎... ✨</div>
+
+<script>
+    // === V7.1 原有逻辑 (完全保留) ===
+    const KEY = 'food_v5_data'; 
+    let data = { stock: {}, meals: [] };
+    let curDate = new Date();
+
+    window.onload = function() {
+        try {
+            let saved = localStorage.getItem(KEY);
+            if(saved) data = JSON.parse(saved);
+            if(!data.stock) data.stock = {};
+            if(!data.meals) data.meals = [];
+        } catch(e) { console.log('Init'); }
+        document.getElementById('cookDate').valueAsDate = new Date();
+        addIngRow(); renderAll();
+        document.getElementById('systemStatus').innerText = "✅ V7.2 PWA版 | 宝宝大人今天吃什么？";
+        
+        // PWA 注册代码
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('PWA Service Worker 注册成功', reg))
+                .catch(err => console.log('PWA 注册失败', err));
+        }
+    };
+
+    function cuteAlert(msg) { alert(msg); }
+    function doBuy() {
+        let name = getVal('buyName'); let qty = parseFloat(getVal('buyQty')); let unit = getVal('buyUnit');
+        if(!name) return cuteAlert("哎呀，好像忘记写是什么好吃的了！(＞﹏＜)");
+        if(isNaN(qty) || qty <= 0) return cuteAlert("数量不对哦，不可以是空气呢~ (qwq)");
+        if(!data.stock[name]) data.stock[name] = {q:0, u:unit};
+        data.stock[name].q += qty; data.stock[name].u = unit;
+        save(); renderAll(); document.getElementById('buyQty').value = '';
+        cuteAlert(`✨ 成功！冰箱里多了 ${qty}${unit} [${name}]！(≧∇≦)ﾉ`);
+    }
+    function doCook() {
+        let dish = getVal('dishName');
+        if(!dish) return cuteAlert("这道美味的料理叫什么名字呀？(O_O)?");
+        let ings = [], rows = document.querySelectorAll('.ing-row');
+        for(let row of rows) {
+            let n = row.querySelector('.i-name').value.trim();
+            let q = parseFloat(row.querySelector('.i-qty').value);
+            let u = row.querySelector('.i-unit').value;
+            if(n && q>0) ings.push({n, q, u});
+        }
+        ings.forEach(i => {
+            if(!data.stock[i.n]) data.stock[i.n] = {q:0, u:i.u};
+            data.stock[i.n].q -= i.q;
+        });
+        data.meals.push({ id: Date.now(), date: getVal('cookDate'), type: getVal('mealType'), name: dish, ings: ings });
+        save(); renderAll();
+        document.getElementById('dishName').value = ''; document.getElementById('ingList').innerHTML = ''; addIngRow();
+        cuteAlert(`🍽️ 记录好啦！[${dish}] 一定很好吃吧~ 吸溜 (*^▽^*)`);
+    }
+    function deleteStock(name) {
+        if(confirm(`(・_・) 确定要把冰箱里的 [${name}] 全部清空吗？`)) { delete data.stock[name]; save(); renderAll(); }
+    }
+    function deleteMeal(id) {
+        if(confirm(`(qwq) 确定要擦掉这条用餐记录吗？`)) { data.meals = data.meals.filter(m => m.id !== id); save(); renderAll(); }
+    }
+    function exportData() {
+        const jsonStr = JSON.stringify(data);
+        const blob = new Blob([jsonStr], {type: "application/json"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url;
+        const date = new Date().toISOString().slice(0,10);
+        a.download = `宝宝饮食备份_${date}.json`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        cuteAlert("📦 数据已打包带走啦！请收好哦 (ﾉ>ω<)ﾉ");
+    }
+    function importData(input) {
+        const file = input.files[0];
+        if(!file) return;
+        if(!confirm("⚠️ 警告：导入数据会覆盖当前的记录哦！\n确定要继续吗？(°ー°〃)")) { input.value = ''; return; }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const newData = JSON.parse(e.target.result);
+                if(newData.stock && newData.meals) { data = newData; save(); renderAll(); cuteAlert("🎉 数据恢复成功！欢迎回家~ (*^▽^*)"); } 
+                else { cuteAlert("文件格式好像不对哦... (O_O)?"); }
+            } catch(err) { cuteAlert("读取失败啦，是不是拿错文件了？"); }
+        };
+        reader.readAsText(file);
+    }
+    function renderAll() {
+        let sList = document.getElementById('stockList'); sList.innerHTML = '';
+        let sortedStock = Object.keys(data.stock).sort();
+        if(sortedStock.length === 0) sList.innerHTML = '<div style="color:#d7ccc8; text-align:center; padding:10px;">👻 冰箱空空如也，快去进货吧~</div>';
+        sortedStock.forEach(k => {
+            let item = data.stock[k];
+            if(item.q !== 0) { sList.innerHTML += `<div class="stock-item"><span><b>${k}</b></span><div style="display:flex; align-items:center;"><span style="${item.q<0?'color:#ef9a9a':''}">${parseFloat(item.q.toFixed(2))} ${item.u}</span><button class="btn-del-mini" onclick="deleteStock('${k}')">×</button></div></div>`; }
+        });
+        let mList = document.getElementById('mealLogList'); mList.innerHTML = '';
+        let recentMeals = [...data.meals].sort((a,b)=>b.id-a.id).slice(0,10);
+        if(recentMeals.length === 0) mList.innerHTML = '<div style="color:#d7ccc8; text-align:center; padding:10px;">还没开始记录呢，期待宝宝大人的美食~</div>';
+        recentMeals.forEach(m => {
+            let t={breakfast:'早',lunch:'午',dinner:'晚'};
+            mList.innerHTML += `<div class="log-item"><div style="display:flex;gap:8px;align-items:center;"><span style="color:#aaa;font-size:0.8em">${m.date.slice(5)}</span> <span class="dish-tag meal-${m.type}" style="margin:0">${t[m.type]}</span> ${m.name}</div><button class="btn-del-mini" onclick="deleteMeal(${m.id})">×</button></div>`;
+        });
+        let dList = document.getElementById('historyList'); dList.innerHTML = '';
+        Object.keys(data.stock).forEach(k => dList.innerHTML += `<option value="${k}">`);
+        renderCalendar();
+    }
+    function renderCalendar() {
+        let y = curDate.getFullYear(), m = curDate.getMonth();
+        document.getElementById('monthTitle').innerText = `${y}年 ${m+1}月`;
+        let grid = document.getElementById('calendarGrid'); grid.innerHTML = '';
+        let firstDay = new Date(y, m, 1).getDay();
+        let daysInMonth = new Date(y, m+1, 0).getDate();
+        ['日','一','二','三','四','五','六'].forEach(d => grid.innerHTML+=`<div style="text-align:center;color:#bcaaa4;font-size:0.8em">${d}</div>`);
+        for(let i=0; i<firstDay; i++) grid.innerHTML+=`<div></div>`;
+        for(let d=1; d<=daysInMonth; d++) {
+            let dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            let isToday = dStr === new Date().toISOString().split('T')[0];
+            let meals = data.meals.filter(x => x.date === dStr);
+            let html = meals.map(x => {
+                let tips = x.ings.map(i=>`${i.n}${i.q}`).join(',');
+                if(tips === "") tips = "没记录食材消耗哦T^T";
+                return `<span class="dish-tag meal-${x.type}" title="${tips}">${x.name}</span>`;
+            }).join('');
+            grid.innerHTML += `<div class="day-cell ${isToday?'today':''}"><div class="day-num">${d}</div><div style="overflow-y:auto;height:70px">${html}</div></div>`;
+        }
+    }
+    function addIngRow() {
+        let d = document.createElement('div'); d.className='ing-row';
+        d.innerHTML = `<input class="i-name" placeholder="食材名" list="historyList" onchange="fillUnit(this)" style="flex:1.5"><input type="number" class="i-qty" placeholder="量" style="flex:0.8"><input class="i-unit" placeholder="单位" style="flex:0.6" readonly><button class="btn-del-mini" onclick="this.parentElement.remove()" style="background:#ef9a9a;color:white">×</button>`;
+        document.getElementById('ingList').appendChild(d);
+    }
+    function fillUnit(i) { if(data.stock[i.value]) i.parentElement.querySelector('.i-unit').value = data.stock[i.value].u; }
+    function moveMonth(n) { curDate.setMonth(curDate.getMonth()+n); renderAll(); }
+    function getVal(id) { return document.getElementById(id).value; }
+    function save() { localStorage.setItem(KEY, JSON.stringify(data)); }
+</script>
+</body>
+</html>
