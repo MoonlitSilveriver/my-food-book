@@ -1,4 +1,4 @@
-const CACHE_NAME = 'baby-food-app-v2';
+const CACHE_NAME = 'baby-food-app-v888';
 const urlsToCache = [
   './index.html',
   './manifest.json'
@@ -18,3 +18,4 @@ self.addEventListener('fetch', event => {
   );
 
 });
+
