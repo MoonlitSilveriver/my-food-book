@@ -20,7 +20,6 @@
             --text: #5d4037; --accent: #ffb74d; --danger: #ef9a9a;
             --safe: #4fc3f7;
             --fridge-bg: #e1f5fe; --fridge-border: #81d4fa;
-            --zone-bg: rgba(255,255,255,0.6);
         }
 
         body { 
@@ -31,7 +30,6 @@
             color: var(--text); margin: 0; padding: 20px; 
             min-height: 100vh; overflow-x: hidden; 
             -webkit-tap-highlight-color: transparent;
-            /* 禁止长按选中文本，为了拖拽体验 */
             user-select: none; -webkit-user-select: none;
         }
         
@@ -65,23 +63,35 @@
         .btn-backup { background: linear-gradient(135deg, #81d4fa, #29b6f6); color: white; flex: 1; }
         .btn-restore { background: #e0f7fa; color: #0277bd; flex: 1; border: 2px dashed #29b6f6; }
         
-        /* 冰箱列表样式 */
+        /* 列表样式 */
         .stock-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 5px; border-bottom: 1px dashed #fce4ec; }
         .ing-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; background: #fff8e1; padding: 8px; border-radius: 12px; flex-wrap: wrap; }
         .log-item { display: flex; justify-content: space-between; padding: 10px; background: #f3e5f5; margin-bottom: 8px; border-radius: 12px; font-size: 0.9em; }
 
-        /* 日历 */
+        /* === 修复后的日历样式 === */
         .calendar-header { display: flex; justify-content: space-between; margin-bottom: 15px; background: #fff0f5; padding: 12px; border-radius: 15px; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
-        .day-cell { background: white; min-height: 100px; padding: 5px; border-radius: 15px; border: 2px solid #fce4ec; font-size: 0.9em; }
-        .day-cell.today { border: 2px solid var(--primary); background: #fff8e1; }
-        .dish-tag { display: block; padding: 3px 8px; margin-bottom: 4px; border-radius: 8px; font-size: 0.8em; color: white; text-shadow: 0 1px 0 rgba(0,0,0,0.1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+        .day-cell { 
+            background: white; min-height: 90px; padding: 5px; 
+            border-radius: 15px; border: 2px solid #fce4ec; font-size: 0.9em; 
+            display: flex; flex-direction: column; overflow: hidden; /* 防止撑破 */
+        }
+        .day-cell.today { border: 2px solid var(--primary); background: #fff8e1; position: relative; }
+        .day-num { font-weight: bold; color: #d7ccc8; margin-bottom: 5px; font-size: 1em; }
+        .day-cell.today .day-num { color: var(--primary); }
+        .day-content { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; } /* 关键：内容区滚动条 */
+        
+        .dish-tag { 
+            display: block; padding: 2px 6px; border-radius: 6px; 
+            font-size: 0.75em; color: white; text-shadow: 0 1px 0 rgba(0,0,0,0.1); 
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+            cursor: pointer;
+        }
         .meal-breakfast { background: #90caf9; } .meal-lunch { background: #ffcc80; } .meal-dinner { background: #ce93d8; }
 
-        /* === 🧊 可视化冰箱 核心样式 === */
+        /* === 可视化冰箱 === */
         .btn-visual { background: linear-gradient(135deg, #4fc3f7, #0288d1); color: white; width: 100%; margin-top: 10px; box-shadow: 0 4px 10px rgba(79, 195, 247, 0.3); }
 
-        /* 冰箱弹窗蒙层 */
         .modal-overlay { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: rgba(0,0,0,0.5); z-index: 999; 
@@ -89,7 +99,6 @@
             backdrop-filter: blur(5px);
         }
         
-        /* 冰箱主体容器 */
         .fridge-modal { 
             width: 95%; max-width: 450px; height: 90vh; 
             background: white; border-radius: 25px; 
@@ -97,7 +106,6 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-
         @keyframes popUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
         .fridge-header { padding: 15px; background: #b3e5fc; display: flex; justify-content: space-between; align-items: center; }
@@ -109,7 +117,6 @@
             display: flex; flex-direction: column; gap: 15px;
         }
 
-        /* 待整理区 (购物袋) */
         .grocery-bag { 
             background: #fff9c4; border: 2px dashed #fbc02d; 
             border-radius: 15px; padding: 10px; min-height: 60px;
@@ -117,48 +124,48 @@
         }
         .grocery-label { width: 100%; font-size: 0.8em; color: #f9a825; margin-bottom: 5px; text-align: center; }
 
-        /* 冰箱结构区 */
         .fridge-body { display: flex; flex-direction: column; gap: 10px; }
         
-        /* 通用格子样式 */
+        /* 修复：冰箱格子防溢出 + 滚动条 */
         .zone { 
             background: rgba(255,255,255,0.7); border: 2px solid #81d4fa; 
-            border-radius: 10px; min-height: 50px; position: relative;
-            display: flex; flex-wrap: wrap; gap: 5px; padding: 5px;
-            align-items: center; justify-content: center;
+            border-radius: 10px; 
+            position: relative;
+            display: flex; flex-wrap: wrap; gap: 4px; padding: 20px 4px 4px 4px; /* 顶部留出label位置 */
+            align-items: flex-start; align-content: flex-start; /* 关键：从上往下排 */
+            justify-content: flex-start;
             transition: background 0.2s;
+            overflow-y: auto; /* 关键：出框显示滚动条 */
         }
-        .zone.drag-over { background: #b3e5fc; border-color: #0288d1; box-shadow: inset 0 0 10px rgba(2,136,209,0.2); }
+        .zone.drag-over { background: #b3e5fc; border-color: #0288d1; }
         .zone::before { 
             content: attr(data-label); position: absolute; top: 2px; left: 5px; 
             font-size: 0.6em; color: #81d4fa; pointer-events: none; 
         }
 
-        /* 上层结构 */
+        /* 固定高度，确保滚动条生效 */
         .top-section { border: 4px solid #b3e5fc; border-radius: 15px; padding: 5px; background: white; }
-        .shelf { height: 60px; margin-bottom: 5px; border-bottom: 3px solid #e1f5fe; }
-        .drawer-row { display: flex; gap: 5px; height: 70px; }
-        .drawer { flex: 1; background: #f1f8e9; border-color: #a5d6a7; }
+        .shelf { height: 70px; margin-bottom: 5px; border-bottom: 3px solid #e1f5fe; }
+        .drawer-row { display: flex; gap: 5px; height: 80px; }
+        .drawer { flex: 1; background: #f1f8e9; border-color: #a5d6a7; height: 100%; box-sizing: border-box; }
 
-        /* 下层结构 */
-        .bottom-section { display: flex; gap: 10px; height: 220px; }
+        .bottom-section { display: flex; gap: 10px; height: 260px; }
         .bottom-col { flex: 1; border: 4px solid #b3e5fc; border-radius: 15px; padding: 5px; background: white; display: flex; flex-direction: column; gap: 5px; }
-        .b-shelf { height: 50px; }
-        .b-drawer { flex: 1; background: #e0f7fa; }
+        .b-shelf { height: 60px; flex-shrink: 0;}
+        .b-drawer { flex: 1; background: #e0f7fa; min-height: 0; } /* min-height:0 解决flex溢出问题 */
 
         /* 食材方块 */
         .food-block { 
             background: white; border: 1px solid #ff80ab; 
-            border-radius: 8px; padding: 4px 8px; 
-            font-size: 0.8em; color: #880e4f;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
-            cursor: grab; user-select: none;
-            z-index: 10; touch-action: none; /* 关键：防止手机原生滚动干扰拖拽 */
-            white-space: nowrap; max-width: 80px; overflow: hidden; text-overflow: ellipsis;
+            border-radius: 6px; padding: 4px 6px; margin: 1px;
+            font-size: 0.75em; color: #880e4f;
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+            cursor: grab; z-index: 10; touch-action: none; 
+            white-space: nowrap; max-width: 75px; overflow: hidden; text-overflow: ellipsis;
             animation: popIn 0.3s;
         }
-        .food-block.dragging { opacity: 0.5; transform: scale(1.1); box-shadow: 0 10px 20px rgba(0,0,0,0.2); position: fixed; pointer-events: none; }
-        .food-block.selected { background: #ff80ab; color: white; transform: scale(1.1); z-index: 100; border: 2px solid white; box-shadow: 0 0 0 2px #ff80ab; }
+        .food-block.dragging { opacity: 0.6; transform: scale(1.1); box-shadow: 0 10px 20px rgba(0,0,0,0.2); position: fixed; pointer-events: none; z-index: 9999; }
+        .food-block.selected { background: #ff80ab; color: white; transform: scale(1.05); z-index: 100; border: 2px solid white; box-shadow: 0 0 0 2px #ff80ab; }
 
         @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
         
@@ -246,7 +253,7 @@
         <div class="fridge-content">
             <div class="grocery-bag" id="zone-unsorted">
                 <div class="grocery-label">🛒 刚买回来的 (点我或长按拖走)</div>
-                </div>
+            </div>
 
             <div class="fridge-body">
                 <div style="font-size:0.8em; color:#0288d1; text-align:center; margin-bottom:5px;">🚪 冷藏室 (上)</div>
@@ -277,7 +284,7 @@
             </div>
         </div>
         <div style="padding:10px; text-align:center; background:#b3e5fc; color:#01579b; font-size:0.8em;">
-            💡 手机：长按方块拖拽，或点击选中再点格子
+            💡 手机：长按方块0.5秒后拖拽 (如无法拖拽请点击选中再点格子)
         </div>
     </div>
 </div>
@@ -286,10 +293,10 @@
     const KEY = 'food_v5_data'; 
     let data = { stock: {}, meals: [] };
     let curDate = new Date();
-    // 拖拽相关变量
-    let selectedBlock = null; // 点击选中的
-    let dragSrcEl = null;     // 正在拖拽的
-    let longPressTimer = null; // 长按计时器
+    // 拖拽相关
+    let selectedBlock = null; 
+    let dragGhost = null;
+    let longPressTimer = null; 
 
     window.onload = function() {
         try {
@@ -300,7 +307,7 @@
         } catch(e) { console.log('Init'); }
         document.getElementById('cookDate').valueAsDate = new Date();
         addIngRow(); renderAll();
-        document.getElementById('systemStatus').innerText = "✅ V7.3 冰箱可视版 | 宝宝今天吃什么？";
+        document.getElementById('systemStatus').innerText = "✅ V7.4 终极修复版 | 日历回归！";
         
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js');
@@ -311,18 +318,18 @@
     function getVal(id) { return document.getElementById(id).value; }
     function save() { localStorage.setItem(KEY, JSON.stringify(data)); }
 
-    // === 核心业务逻辑 ===
+    // === 业务逻辑 ===
     function doBuy() {
         let name = getVal('buyName'); let qty = parseFloat(getVal('buyQty')); let unit = getVal('buyUnit');
         if(!name) return cuteAlert("忘记写名字啦！");
         if(isNaN(qty) || qty <= 0) return cuteAlert("数量不对哦~");
         
-        if(!data.stock[name]) data.stock[name] = {q:0, u:unit, loc:''}; // loc: '' 表示在待整理区
+        if(!data.stock[name]) data.stock[name] = {q:0, u:unit, loc:''}; 
         data.stock[name].q += qty; 
         data.stock[name].u = unit;
         
         save(); renderAll(); document.getElementById('buyQty').value = '';
-        if(document.getElementById('fridgeOverlay').style.display === 'flex') renderFridgeBlocks(); // 如果冰箱开着就刷新
+        if(document.getElementById('fridgeOverlay').style.display === 'flex') renderFridgeBlocks(); 
         cuteAlert(`✨ 入库成功！快去可视冰箱里把它归位吧！`);
     }
 
@@ -343,7 +350,7 @@
         data.meals.push({ id: Date.now(), date: getVal('cookDate'), type: getVal('mealType'), name: dish, ings: ings });
         save(); renderAll();
         document.getElementById('dishName').value = ''; document.getElementById('ingList').innerHTML = ''; addIngRow();
-        cuteAlert(`🍽️ 记录完成！记得去看看冰箱是不是变空了~`);
+        cuteAlert(`🍽️ 记录完成！`);
     }
 
     function deleteStock(name) {
@@ -355,14 +362,12 @@
 
     // === 渲染逻辑 ===
     function renderAll() {
-        // 渲染库存列表
         let sList = document.getElementById('stockList'); sList.innerHTML = '';
         let sortedStock = Object.keys(data.stock).sort();
         if(sortedStock.length === 0) sList.innerHTML = '<div style="color:#d7ccc8; text-align:center;">👻 冰箱空空如也</div>';
         sortedStock.forEach(k => {
             let item = data.stock[k];
             if(item.q !== 0) { 
-                // 显示当前位置
                 let locName = item.loc ? "✅ 已归位" : "🛒 待整理";
                 sList.innerHTML += `<div class="stock-item">
                     <div><b>${k}</b> <span style="font-size:0.7em; color:#aaa;">(${locName})</span></div>
@@ -371,7 +376,6 @@
             }
         });
 
-        // 渲染流水账 & 下拉列表 (保持原样)
         let mList = document.getElementById('mealLogList'); mList.innerHTML = '';
         [...data.meals].sort((a,b)=>b.id-a.id).slice(0,10).forEach(m => {
             let t={breakfast:'早',lunch:'午',dinner:'晚'};
@@ -382,34 +386,52 @@
         renderCalendar();
     }
 
+    // === 日历渲染（修复版） ===
+    function renderCalendar() {
+        let y = curDate.getFullYear(), m = curDate.getMonth();
+        document.getElementById('monthTitle').innerText = `${y}年 ${m+1}月`;
+        let grid = document.getElementById('calendarGrid'); grid.innerHTML = '';
+        let days = new Date(y, m+1, 0).getDate();
+        let first = new Date(y, m, 1).getDay();
+        
+        ['日','一','二','三','四','五','六'].forEach(d => grid.innerHTML+=`<div style="text-align:center;color:#bcaaa4;font-size:0.8em">${d}</div>`);
+        for(let i=0;i<first;i++) grid.innerHTML+=`<div></div>`;
+        
+        for(let d=1; d<=days; d++) {
+            let dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            let isToday = dStr === new Date().toISOString().split('T')[0];
+            let meals = data.meals.filter(x => x.date === dStr);
+            let html = meals.map(x => {
+                let tips = x.ings.map(i=>`${i.n}${i.q}`).join(','); 
+                return `<span class="dish-tag meal-${x.type}" title="${tips||'无食材'}">${x.name}</span>`;
+            }).join('');
+            
+            grid.innerHTML += `<div class="day-cell ${isToday?'today':''}">
+                <div class="day-num">${d}</div>
+                <div class="day-content">${html}</div>
+            </div>`;
+        }
+    }
+    function moveMonth(n) { curDate.setMonth(curDate.getMonth()+n); renderCalendar(); }
+
     // === 🧊 可视化冰箱逻辑 ===
-    function openFridge() {
-        document.getElementById('fridgeOverlay').style.display = 'flex';
-        renderFridgeBlocks();
-    }
-    function closeFridge() {
-        document.getElementById('fridgeOverlay').style.display = 'none';
-        renderAll(); // 关闭时刷新主列表
-    }
+    function openFridge() { document.getElementById('fridgeOverlay').style.display = 'flex'; renderFridgeBlocks(); }
+    function closeFridge() { document.getElementById('fridgeOverlay').style.display = 'none'; renderAll(); }
 
     function renderFridgeBlocks() {
-        // 清空所有格子
         document.querySelectorAll('.zone').forEach(z => z.innerHTML = '');
         document.getElementById('zone-unsorted').innerHTML = '<div class="grocery-label">🛒 刚买回来的 (点我或长按拖走)</div>';
 
         Object.keys(data.stock).forEach(name => {
             let item = data.stock[name];
-            if(item.q <= 0) return; // 吃完的不显示
+            if(item.q <= 0) return; 
 
             let block = document.createElement('div');
             block.className = 'food-block';
             block.innerText = name;
-            block.dataset.name = name; // 存名字
-            
-            // 绑定交互事件
+            block.dataset.name = name; 
             attachInteraction(block);
 
-            // 放入对应位置
             let targetId = item.loc || 'zone-unsorted';
             let targetZone = document.getElementById(targetId);
             if(targetZone) targetZone.appendChild(block);
@@ -417,61 +439,62 @@
         });
     }
 
-    // === 🖐️ 触摸与拖拽交互引擎 (V2.0 混合模式) ===
+    // === 🖐️ 触摸交互引擎 (修复版) ===
     function attachInteraction(el) {
-        // 模式1：点击选中 (最稳妥)
+        // 点击模式
         el.onclick = function(e) {
-            e.stopPropagation(); // 防止冒泡
+            e.stopPropagation();
             if(selectedBlock) selectedBlock.classList.remove('selected');
             selectedBlock = el;
             el.classList.add('selected');
         };
 
-        // 模式2：长按拖拽 (手机端)
+        // 长按拖拽模式
         el.ontouchstart = function(e) {
+            if(e.touches.length > 1) return; // 忽略多指
             longPressTimer = setTimeout(() => {
                 startDrag(el, e.touches[0]);
-            }, 300); // 长按0.3秒触发拖拽
+            }, 500); // 500ms 长按触发
         };
+        
+        // 如果手指移动了(滑动屏幕)，就取消长按计时，防止误触
+        el.ontouchmove = function() { clearTimeout(longPressTimer); };
         el.ontouchend = function() { clearTimeout(longPressTimer); };
     }
 
-    // 处理拖拽过程
-    let dragGhost = null;
     function startDrag(el, touch) {
         if(selectedBlock) { selectedBlock.classList.remove('selected'); selectedBlock = null; }
         
-        // 创建分身 (Ghost)
+        // 创建分身
         dragGhost = el.cloneNode(true);
         dragGhost.classList.add('dragging');
         document.body.appendChild(dragGhost);
         
+        // 初始位置
         moveGhost(touch.clientX, touch.clientY);
 
-        // 绑定全局移动事件
+        // 接管全局触摸
         document.ontouchmove = function(e) {
-            e.preventDefault(); // 禁止屏幕滚动
+            e.preventDefault(); // 禁止屏幕滚动，专心拖拽
             moveGhost(e.touches[0].clientX, e.touches[0].clientY);
         };
 
         document.ontouchend = function(e) {
             let touch = e.changedTouches[0];
-            // 隐藏Ghost看一下底下是哪个格子
-            dragGhost.style.display = 'none';
+            dragGhost.style.display = 'none'; // 隐藏分身以检测下方元素
             let elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
             dragGhost.remove();
-            
-            // 找最近的 zone
+            dragGhost = null;
+
             let zone = elemBelow ? elemBelow.closest('.zone') : null;
             if(!zone && elemBelow && elemBelow.closest('.grocery-bag')) zone = document.getElementById('zone-unsorted');
 
             if(zone) {
-                // 移动元素
                 zone.appendChild(el);
                 updateItemLoc(el.dataset.name, zone.id);
             }
             
-            // 清理事件
+            // 释放全局事件
             document.ontouchmove = null;
             document.ontouchend = null;
         };
@@ -484,7 +507,7 @@
         }
     }
 
-    // 绑定格子的点击事件 (配合点击选中模式)
+    // 格子点击响应 (配合点击模式)
     document.querySelectorAll('.zone, .grocery-bag').forEach(zone => {
         zone.onclick = function() {
             if(selectedBlock) {
@@ -498,34 +521,16 @@
 
     function updateItemLoc(name, locId) {
         if(locId === 'zone-unsorted') locId = '';
-        if(data.stock[name]) {
-            data.stock[name].loc = locId;
-            save();
-        }
+        if(data.stock[name]) { data.stock[name].loc = locId; save(); }
     }
 
-    // 原有的辅助函数
+    // 辅助函数
     function addIngRow() {
         let d = document.createElement('div'); d.className='ing-row';
         d.innerHTML = `<input class="i-name" placeholder="食材名" list="historyList" onchange="fillUnit(this)" style="flex:1.5"><input type="number" class="i-qty" placeholder="量" style="flex:0.8"><input class="i-unit" placeholder="单位" style="flex:0.6" readonly><button class="btn-del-mini" onclick="this.parentElement.remove()" style="background:#ef9a9a;color:white">×</button>`;
         document.getElementById('ingList').appendChild(d);
     }
     function fillUnit(i) { if(data.stock[i.value]) i.parentElement.querySelector('.i-unit').value = data.stock[i.value].u; }
-    function renderCalendar() { /* 保持原样简化版 */
-        let y = curDate.getFullYear(), m = curDate.getMonth();
-        document.getElementById('monthTitle').innerText = `${y}年 ${m+1}月`;
-        let grid = document.getElementById('calendarGrid'); grid.innerHTML = '';
-        let days = new Date(y, m+1, 0).getDate();
-        let first = new Date(y, m, 1).getDay();
-        for(let i=0;i<first;i++) grid.innerHTML+=`<div></div>`;
-        for(let d=1; d<=days; d++) {
-            let dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            let isToday = dStr === new Date().toISOString().split('T')[0];
-            let hasMeal = data.meals.some(x=>x.date===dStr);
-            grid.innerHTML += `<div class="day-cell ${isToday?'today':''}" style="min-height:40px;display:flex;justify-content:center;align-items:center;">${d}${hasMeal?'<span style="color:var(--primary)">★</span>':''}</div>`;
-        }
-    }
-    function moveMonth(n) { curDate.setMonth(curDate.getMonth()+n); renderCalendar(); }
 </script>
 </body>
 </html>
