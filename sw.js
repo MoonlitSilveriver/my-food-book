@@ -1,21 +1,12 @@
-const CACHE_NAME = 'baby-food-app-v888';
-const urlsToCache = [
-  './index.html',
-  './manifest.json'
-];
+// sw.js
+const CACHE_NAME = 'baby-food-v999'; // 版本号改大一点
+const urlsToCache = ['./index.html', './manifest.json'];
 
 self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
-  );
+  self.skipWaiting(); // 强制立即激活
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache)));
 });
 
 self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => response || fetch(event.request))
-  );
-
+  event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
 });
-
