@@ -1,5 +1,5 @@
 // sw.js
-const CACHE_NAME = 'baby-food-v1000'; // 版本号改大一点
+const CACHE_NAME = 'baby-food-v1001'; // 版本号改大一点
 const urlsToCache = ['./index.html', './manifest.json'];
 
 self.addEventListener('install', event => {
@@ -10,4 +10,5 @@ self.addEventListener('install', event => {
 self.addEventListener('fetch', event => {
   event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
 });
+
 
