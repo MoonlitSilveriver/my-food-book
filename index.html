@@ -19,7 +19,6 @@
             --bg-color: #fff0f5; --card-bg: #ffffff;
             --text: #5d4037; --accent: #ffb74d; --danger: #ef9a9a;
             --safe: #4fc3f7;
-            --fridge-bg: #e1f5fe; --fridge-border: #81d4fa;
         }
 
         body { 
@@ -57,6 +56,10 @@
         .btn-add { background: #f8bbd0; color: #880e4f; font-size: 0.8em; padding: 5px 12px; }
         .btn-del-mini { background: #ffcdd2; color: #c62828; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-left: 8px; flex-shrink: 0; }
         
+        /* 💎 可爱保险箱样式 */
+        .btn-backup { background: linear-gradient(135deg, #81d4fa, #29b6f6); color: white; flex: 1; text-shadow: 1px 1px 0 rgba(0,0,0,0.1); }
+        .btn-restore { background: #e0f7fa; color: #0277bd; flex: 1; border: 2px dashed #29b6f6; }
+
         /* 列表样式 */
         .stock-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 5px; border-bottom: 1px dashed #fce4ec; }
         .ing-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; background: #fff8e1; padding: 8px; border-radius: 12px; flex-wrap: wrap; }
@@ -73,80 +76,31 @@
         .dish-tag { display: block; padding: 2px 6px; border-radius: 6px; font-size: 0.75em; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .meal-breakfast { background: #90caf9; } .meal-lunch { background: #ffcc80; } .meal-dinner { background: #ce93d8; }
 
-        /* === 🧊 冰箱可视化 (V7.6 精修版) === */
+        /* === 🧊 冰箱可视化 === */
         .btn-visual { background: linear-gradient(135deg, #4fc3f7, #0288d1); color: white; width: 100%; margin-top: 10px; }
-
-        .modal-overlay { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.5); z-index: 999; 
-            display: none; justify-content: center; align-items: center; 
-            backdrop-filter: blur(5px);
-        }
-        
-        .fridge-modal { 
-            width: 95%; max-width: 450px; height: 92vh; 
-            background: white; border-radius: 25px; 
-            display: flex; flex-direction: column; overflow: hidden;
-            animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .fridge-modal { width: 95%; max-width: 450px; height: 92vh; background: white; border-radius: 25px; display: flex; flex-direction: column; overflow: hidden; animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @keyframes popUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
         .fridge-header { padding: 15px; background: #b3e5fc; display: flex; justify-content: space-between; align-items: center; }
         .fridge-header h3 { margin: 0; border: none; font-size: 1.1em; color: #01579b; }
         .btn-close { background: white; color: #01579b; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-
         .fridge-content { flex: 1; overflow-y: auto; padding: 10px; background: #e1f5fe; display: flex; flex-direction: column; gap: 15px; }
-
         .grocery-bag { background: #fff9c4; border: 2px dashed #fbc02d; border-radius: 12px; padding: 10px; min-height: 80px; display: flex; flex-wrap: wrap; gap: 8px; align-content: flex-start; cursor: pointer; }
         .grocery-label { width: 100%; font-size: 0.8em; color: #f9a825; margin-bottom: 5px; text-align: center; pointer-events: none; }
-
-        .fridge-body { display: flex; flex-direction: column; gap: 10px; }
-        
-        /* 通用格子 */
-        .zone { 
-            background: rgba(255,255,255,0.7); border: 2px solid #81d4fa; 
-            border-radius: 10px; position: relative;
-            display: flex; flex-wrap: wrap; gap: 4px; padding: 20px 4px 4px 4px; /* 减小上间距 */
-            align-content: flex-start; overflow-y: auto;
-            cursor: pointer; transition: background 0.2s;
-            box-sizing: border-box;
-        }
-        .zone:hover { background: rgba(129, 212, 250, 0.2); }
+        .zone { background: rgba(255,255,255,0.7); border: 2px solid #81d4fa; border-radius: 10px; position: relative; display: flex; flex-wrap: wrap; gap: 4px; padding: 20px 4px 4px 4px; align-content: flex-start; overflow-y: auto; cursor: pointer; }
         .zone::before { content: attr(data-label); position: absolute; top: 1px; left: 5px; font-size: 0.55em; color: #81d4fa; pointer-events: none; }
-
-        /* 上部冷藏区结构修复 */
         .top-section { border: 4px solid #b3e5fc; border-radius: 15px; padding: 5px; background: white; display: flex; flex-direction: column; gap: 5px; }
         .shelf { height: 75px; }
-        
-        /* 并排抽屉容器锁定高度，防止挤压下层 */
         .drawer-row { display: flex; gap: 5px; height: 80px; flex-shrink: 0; }
-        
         #loc-t4 { height: 80px; background: #f1f8e9; border-color: #a5d6a7; flex-shrink: 0; }
         .drawer { flex: 1; background: #f1f8e9; border-color: #a5d6a7; height: 100%; }
-
-        /* 下部冷冻区保持稳定 */
         .bottom-section { display: flex; gap: 10px; height: 260px; flex-shrink: 0; }
         .bottom-col { flex: 1; border: 4px solid #b3e5fc; border-radius: 15px; padding: 5px; background: white; display: flex; flex-direction: column; gap: 5px; }
         .b-shelf { height: 60px; flex-shrink: 0;}
         .b-drawer { flex: 1; background: #e0f7fa; min-height: 0; }
-
-        /* 食材方块 */
-        .food-block { 
-            background: white; border: 1px solid #ff80ab; 
-            border-radius: 6px; padding: 3px 6px; margin: 1px;
-            font-size: 0.72em; color: #880e4f;
-            box-shadow: 1px 1px 3px rgba(0,0,0,0.1);
-            white-space: nowrap; max-width: 80px; overflow: hidden; text-overflow: ellipsis;
-            animation: popIn 0.3s; cursor: pointer;
-        }
-        .food-block.selected { 
-            background: #ff80ab; color: white; border-color: white;
-            box-shadow: 0 0 10px rgba(255, 128, 171, 0.6);
-            transform: scale(1.05); z-index: 10;
-        }
-
+        .food-block { background: white; border: 1px solid #ff80ab; border-radius: 6px; padding: 3px 6px; margin: 1px; font-size: 0.72em; color: #880e4f; white-space: nowrap; max-width: 80px; overflow: hidden; text-overflow: ellipsis; animation: popIn 0.3s; cursor: pointer; }
+        .food-block.selected { background: #ff80ab; color: white; border-color: white; box-shadow: 0 0 10px rgba(255, 128, 171, 0.6); transform: scale(1.05); z-index: 10; }
         @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
-        
         .footer-status { text-align: center; color: var(--primary); font-size: 0.8em; margin-top: 30px; opacity: 0.6; }
     </style>
 </head>
@@ -185,7 +139,17 @@
             <div id="mealLogList" style="max-height:150px; overflow-y:auto;"></div>
         </div>
         
-        <div class="card" style="border: 2px dashed var(--safe);"><div class="input-row"><button class="btn-backup" onclick="exportData()">⬇️ 备份</button><button class="btn-restore" onclick="document.getElementById('fileInput').click()">⬆️ 恢复</button><input type="file" id="fileInput" style="display:none" onchange="importData(this)"></div></div>
+        <div class="card" style="border: 2px dashed var(--safe);">
+            <h3>📂 数据保险箱 <span style="font-size:0.6em; color:#aaa; font-weight:normal; margin-left:auto;">(搬家/备份用这里)</span></h3>
+            <div class="input-row">
+                <button class="btn-backup" onclick="exportData()">⬇️ 备份/导出数据</button>
+                <button class="btn-restore" onclick="document.getElementById('fileInput').click()">⬆️ 恢复/导入数据</button>
+                <input type="file" id="fileInput" style="display:none" onchange="importData(this)">
+            </div>
+            <div style="font-size:0.8em; color:#90a4ae; margin-top:10px;">
+                * 电脑点 “备份” 发给手机，手机点 “恢复” 就能同步啦！
+            </div>
+        </div>
     </div>
 
     <div class="right-panel">
@@ -196,11 +160,11 @@
     </div>
 </div>
 
-<div class="footer-status" id="systemStatus">✅ V7.6 布局精修版 | 抽屉大小修复</div>
+<div class="footer-status" id="systemStatus">✅ V7.7 修复版 | 数据安全与单位联想</div>
 
 <div class="modal-overlay" id="fridgeOverlay">
     <div class="fridge-modal">
-        <div class="fridge-header"><h3>🧊 分类您的食材</h3><div class="btn-close" onclick="closeFridge()">×</div></div>
+        <div class="fridge-header"><h3>🧊 整理冰箱</h3><div class="btn-close" onclick="closeFridge()">×</div></div>
         <div class="fridge-content">
             <div class="grocery-bag zone" id="zone-unsorted"><div class="grocery-label">🛒 待整理区</div></div>
             <div class="fridge-body">
@@ -217,7 +181,6 @@
                 </div>
             </div>
         </div>
-        <div style="padding:10px; text-align:center; background:#b3e5fc; color:#01579b; font-size:0.8em;">💡 操作：先点一下食材，再点一下您想放的格子</div>
     </div>
 </div>
 
@@ -239,14 +202,16 @@
 
     function doBuy() {
         let n = document.getElementById('buyName').value; let q = parseFloat(document.getElementById('buyQty').value);
-        if(!n || isNaN(q)) return cuteAlert("还没填完整哦~");
-        if(!data.stock[n]) data.stock[n] = {q:0, u:document.getElementById('buyUnit').value, loc:''}; 
-        data.stock[n].q += q; save(); renderAll(); document.getElementById('buyQty').value = '';
+        let u = document.getElementById('buyUnit').value;
+        if(!n || isNaN(q)) return cuteAlert("填完整哦~");
+        if(!data.stock[n]) data.stock[n] = {q:0, u:u, loc:''}; 
+        data.stock[n].q += q; data.stock[n].u = u;
+        save(); renderAll(); document.getElementById('buyQty').value = '';
         if(document.getElementById('fridgeOverlay').style.display === 'flex') renderFridgeBlocks();
     }
 
     function doCook() {
-        let dish = document.getElementById('dishName').value; if(!dish) return cuteAlert("料理叫什么？");
+        let dish = document.getElementById('dishName').value; if(!dish) return cuteAlert("名字？");
         let ings = []; document.querySelectorAll('.ing-row').forEach(row => {
             let n = row.querySelector('.i-name').value; let q = parseFloat(row.querySelector('.i-qty').value);
             if(n && q) ings.push({n, q, u: row.querySelector('.i-unit').value});
@@ -256,9 +221,6 @@
         save(); renderAll();
         document.getElementById('dishName').value = ''; document.getElementById('ingList').innerHTML = ''; addIngRow();
     }
-
-    function deleteStock(n) { if(confirm(`吃光光 ${n}？`)) { delete data.stock[n]; save(); renderAll(); renderFridgeBlocks(); } }
-    function deleteMeal(id) { if(confirm(`删除这条记录？`)) { data.meals = data.meals.filter(m => m.id !== id); save(); renderAll(); } }
 
     function renderAll() {
         let sList = document.getElementById('stockList'); sList.innerHTML = '';
@@ -279,7 +241,6 @@
         let y = curDate.getFullYear(), m = curDate.getMonth();
         document.getElementById('monthTitle').innerText = `${y}年 ${m+1}月`;
         let grid = document.getElementById('calendarGrid'); grid.innerHTML = '';
-        ['日','一','二','三','四','五','六'].forEach(d => grid.innerHTML+=`<div style="text-align:center;color:#bcaaa4;font-size:0.8em">${d}</div>`);
         let days = new Date(y, m+1, 0).getDate(); let first = new Date(y, m, 1).getDay();
         for(let i=0;i<first;i++) grid.innerHTML+=`<div></div>`;
         for(let d=1; d<=days; d++) {
@@ -310,13 +271,27 @@
         zone.onclick = () => { if(selectedBlock) { zone.appendChild(selectedBlock); let name = selectedBlock.innerText; data.stock[name].loc = zone.id==='zone-unsorted'?'':zone.id; save(); selectedBlock.classList.remove('selected'); selectedBlock = null; } };
     });
 
+    // ✨ 核心联想逻辑回归
     function addIngRow() {
         let d = document.createElement('div'); d.className='ing-row';
-        d.innerHTML = `<input class="i-name" placeholder="食材" list="historyList" style="flex:1.5"><input type="number" class="i-qty" placeholder="量" style="flex:0.8"><input class="i-unit" placeholder="单位" style="flex:0.6" readonly><button class="btn-del-mini" onclick="this.parentElement.remove()">×</button>`;
+        d.innerHTML = `
+            <input class="i-name" placeholder="食材" list="historyList" onchange="fillUnit(this)" style="flex:1.5">
+            <input type="number" class="i-qty" placeholder="量" style="flex:0.8">
+            <input class="i-unit" placeholder="单位" style="flex:0.6">
+            <button class="btn-del-mini" onclick="this.parentElement.remove()">×</button>`;
         document.getElementById('ingList').appendChild(d);
     }
-    function exportData() { let blob = new Blob([JSON.stringify(data)], {type: "application/json"}); let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `饮食备份_${new Date().toISOString().slice(0,10)}.json`; a.click(); }
-    function importData(input) { let reader = new FileReader(); reader.onload = (e) => { data = JSON.parse(e.target.result); save(); renderAll(); }; reader.readAsText(input.files[0]); }
+    
+    function fillUnit(i) {
+        if(data.stock[i.value]) {
+            i.parentElement.querySelector('.i-unit').value = data.stock[i.value].u;
+        }
+    }
+
+    function deleteStock(n) { if(confirm(`吃光光 ${n}？`)) { delete data.stock[n]; save(); renderAll(); } }
+    function deleteMeal(id) { if(confirm(`删除记录？`)) { data.meals = data.meals.filter(m => m.id !== id); save(); renderAll(); } }
+    function exportData() { let blob = new Blob([JSON.stringify(data)], {type: "application/json"}); let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `饮食备份_${new Date().toISOString().slice(0,10)}.json`; a.click(); cuteAlert("📦 数据已打包！"); }
+    function importData(input) { let reader = new FileReader(); reader.onload = (e) => { data = JSON.parse(e.target.result); save(); renderAll(); cuteAlert("🎉 恢复成功！"); }; reader.readAsText(input.files[0]); }
 </script>
 </body>
 </html>
