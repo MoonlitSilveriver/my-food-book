@@ -13,7 +13,7 @@
     <link rel="apple-touch-icon" href="https://moonlitsilveriver.github.io/my-food-book/icon.png">
     
     <style>
-        /* === 🍬 基础调色盘 === */
+        /* === 🍬 基础调色盘 (保持 V7.1 经典色) === */
         :root { 
             --primary: #ff80ab; --primary-dark: #f06292;
             --bg-color: #fff0f5; --card-bg: #ffffff;
@@ -36,6 +36,7 @@
         .right-panel { flex: 1.5; min-width: 360px; }
         @media (max-width: 850px) { .left-panel, .right-panel { flex: 100%; min-width: 100%; } }
 
+        /* 卡片样式 */
         .card { 
             background: var(--card-bg); padding: 20px; 
             border-radius: 20px; margin-bottom: 20px; 
@@ -51,12 +52,12 @@
         button { cursor: pointer; border: none; border-radius: 12px; font-weight: bold; padding: 10px 15px; transition: 0.2s; font-family: inherit; }
         button:active { transform: scale(0.95); }
         
-        .btn-buy { background: linear-gradient(135deg, #a5d6a7, #66bb6a); color: white; width: 100%; }
-        .btn-cook { background: linear-gradient(135deg, #ffcc80, #ffa726); color: white; width: 100%; font-size: 1.1em; padding: 12px; margin-top: 10px; }
+        .btn-buy { background: linear-gradient(135deg, #a5d6a7, #66bb6a); color: white; width: 100%; text-shadow: 1px 1px 0 rgba(0,0,0,0.1); }
+        .btn-cook { background: linear-gradient(135deg, #ffcc80, #ffa726); color: white; width: 100%; font-size: 1.1em; padding: 12px; margin-top: 10px; text-shadow: 1px 1px 0 rgba(0,0,0,0.1); }
         .btn-add { background: #f8bbd0; color: #880e4f; font-size: 0.8em; padding: 5px 12px; }
         .btn-del-mini { background: #ffcdd2; color: #c62828; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-left: 8px; flex-shrink: 0; }
         
-        /* 💎 可爱保险箱样式 */
+        /* 📂 数据保险箱专用样式 */
         .btn-backup { background: linear-gradient(135deg, #81d4fa, #29b6f6); color: white; flex: 1; text-shadow: 1px 1px 0 rgba(0,0,0,0.1); }
         .btn-restore { background: #e0f7fa; color: #0277bd; flex: 1; border: 2px dashed #29b6f6; }
 
@@ -65,7 +66,7 @@
         .ing-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; background: #fff8e1; padding: 8px; border-radius: 12px; flex-wrap: wrap; }
         .log-item { display: flex; justify-content: space-between; padding: 10px; background: #f3e5f5; margin-bottom: 8px; border-radius: 12px; font-size: 0.9em; }
 
-        /* 日历 */
+        /* 日历样式 */
         .calendar-header { display: flex; justify-content: space-between; margin-bottom: 15px; background: #fff0f5; padding: 12px; border-radius: 15px; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
         .day-cell { background: white; min-height: 90px; padding: 5px; border-radius: 15px; border: 2px solid #fce4ec; font-size: 0.9em; display: flex; flex-direction: column; overflow: hidden; }
@@ -76,7 +77,7 @@
         .dish-tag { display: block; padding: 2px 6px; border-radius: 6px; font-size: 0.75em; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .meal-breakfast { background: #90caf9; } .meal-lunch { background: #ffcc80; } .meal-dinner { background: #ce93d8; }
 
-        /* === 🧊 冰箱可视化 === */
+        /* === 🧊 冰箱可视化 (V7.6 布局) === */
         .btn-visual { background: linear-gradient(135deg, #4fc3f7, #0288d1); color: white; width: 100%; margin-top: 10px; }
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
         .fridge-modal { width: 95%; max-width: 450px; height: 92vh; background: white; border-radius: 25px; display: flex; flex-direction: column; overflow: hidden; animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
@@ -109,23 +110,34 @@
 <div class="container">
     <div class="left-panel">
         <div class="card">
-            <h3>🍓 进货啦</h3>
+            <h3>🍓 进货啦 <span style="font-size:0.6em; color:#aaa; font-weight:normal; margin-left:auto;">(记得填单位哦)</span></h3>
             <div class="input-row"><input type="text" id="buyName" placeholder="买了好吃的..." list="historyList" style="flex:2"></div>
             <div class="input-row">
-                <input type="number" id="buyQty" placeholder="量" step="0.1">
-                <select id="buyUnit" style="flex:0.8"><option value="个">个</option><option value="kg">kg</option><option value="g">g</option><option value="包">包</option><option value="瓶">瓶</option><option value="盒">盒</option></select>
-                <button class="btn-buy" onclick="doBuy()" style="flex:0.8">入库</button>
+                <input type="number" id="buyQty" placeholder="多少?" step="0.1">
+                <select id="buyUnit" style="flex:0.8">
+                    <option value="个">个</option> <option value="kg">kg</option> <option value="g">g</option>
+                    <option value="包">包</option> <option value="瓶">瓶</option> <option value="盒">盒</option> <option value="把">把</option>
+                </select>
+                <button class="btn-buy" onclick="doBuy()" style="flex:0.8">✨ 入库</button>
             </div>
             <datalist id="historyList"></datalist>
         </div>
 
         <div class="card" style="border: 3px solid var(--accent);">
-            <h3>🍯 小厨房</h3>
-            <div class="input-row"><input type="date" id="cookDate"><select id="mealType"><option value="breakfast">早</option><option value="lunch" selected>午</option><option value="dinner">晚</option></select></div>
-            <div class="input-row"><input type="text" id="dishName" placeholder="料理名字..."></div>
-            <div style="display:flex; justify-content:space-between; margin:15px 0 5px 0;"><span style="color:#8d6e63; font-size:0.9em;">消耗食材:</span><button class="btn-add" onclick="addIngRow()">+</button></div>
+            <h3>🍯 小厨房 <span style="font-size:0.6em; color:#aaa; font-weight:normal; margin-left:auto;">(今天恰什么?)</span></h3>
+            <div class="input-row">
+                <input type="date" id="cookDate">
+                <select id="mealType">
+                    <option value="breakfast">🌤️ 早餐</option> <option value="lunch" selected>☀️ 午餐</option> <option value="dinner">🌙 晚餐</option>
+                </select>
+            </div>
+            <div class="input-row"><input type="text" id="dishName" placeholder="比如: 豪华泡面 🍜"></div>
+            <div style="display:flex; justify-content:space-between; margin:15px 0 5px 0;">
+                <span style="color:#8d6e63; font-size:0.9em;">🧂 消耗了哪些食材呀:</span>
+                <button class="btn-add" onclick="addIngRow()">+ 加一项</button>
+            </div>
             <div id="ingList"></div> 
-            <button class="btn-cook" onclick="doCook()">💖 开动！</button>
+            <button class="btn-cook" onclick="doCook()">💖 做好啦，开动！</button>
         </div>
 
         <div class="card">
@@ -135,7 +147,7 @@
         </div>
 
         <div class="card">
-            <h3>📒 流水账</h3>
+            <h3>📒 碎碎念流水账</h3>
             <div id="mealLogList" style="max-height:150px; overflow-y:auto;"></div>
         </div>
         
@@ -154,13 +166,17 @@
 
     <div class="right-panel">
         <div class="card">
-            <div class="calendar-header"><button onclick="moveMonth(-1)">◀</button><h3 id="monthTitle" style="margin:0; border:none; color:var(--text);">...</h3><button onclick="moveMonth(1)">▶</button></div>
+            <div class="calendar-header">
+                <button onclick="moveMonth(-1)">◀ 上月</button>
+                <h3 id="monthTitle" style="margin:0; border:none; color:var(--text);">...</h3>
+                <button onclick="moveMonth(1)">下月 ▶</button>
+            </div>
             <div class="calendar-grid" id="calendarGrid"></div>
         </div>
     </div>
 </div>
 
-<div class="footer-status" id="systemStatus">✅ V7.7 修复版 | 数据安全与单位联想</div>
+<div class="footer-status" id="systemStatus">正在启动 PWA... ✨</div>
 
 <div class="modal-overlay" id="fridgeOverlay">
     <div class="fridge-modal">
@@ -194,24 +210,30 @@
         try { let saved = localStorage.getItem(KEY); if(saved) data = JSON.parse(saved); if(!data.stock) data.stock = {}; if(!data.meals) data.meals = []; } catch(e) {}
         document.getElementById('cookDate').valueAsDate = new Date();
         addIngRow(); renderAll();
+        document.getElementById('systemStatus').innerText = "✅ V7.8 回归版 | 欢迎回来，宝宝大人！";
         if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
     };
 
     function cuteAlert(msg) { alert(msg); }
     function save() { localStorage.setItem(KEY, JSON.stringify(data)); }
 
+    // ✨ 找回可爱的入库弹窗
     function doBuy() {
         let n = document.getElementById('buyName').value; let q = parseFloat(document.getElementById('buyQty').value);
         let u = document.getElementById('buyUnit').value;
-        if(!n || isNaN(q)) return cuteAlert("填完整哦~");
+        if(!n) return cuteAlert("哎呀，好像忘记写是什么好吃的了！(＞﹏＜)");
+        if(isNaN(q) || q <= 0) return cuteAlert("数量不对哦，不可以是空气呢~ (qwq)");
         if(!data.stock[n]) data.stock[n] = {q:0, u:u, loc:''}; 
         data.stock[n].q += q; data.stock[n].u = u;
         save(); renderAll(); document.getElementById('buyQty').value = '';
         if(document.getElementById('fridgeOverlay').style.display === 'flex') renderFridgeBlocks();
+        cuteAlert(`✨ 成功！冰箱里多了 ${q}${u} [${n}]！(≧∇≦)ﾉ`);
     }
 
+    // ✨ 找回可爱的开动弹窗
     function doCook() {
-        let dish = document.getElementById('dishName').value; if(!dish) return cuteAlert("名字？");
+        let dish = document.getElementById('dishName').value; 
+        if(!dish) return cuteAlert("这道美味的料理叫什么名字呀？(O_O)?");
         let ings = []; document.querySelectorAll('.ing-row').forEach(row => {
             let n = row.querySelector('.i-name').value; let q = parseFloat(row.querySelector('.i-qty').value);
             if(n && q) ings.push({n, q, u: row.querySelector('.i-unit').value});
@@ -220,7 +242,12 @@
         data.meals.push({ id: Date.now(), date: document.getElementById('cookDate').value, type: document.getElementById('mealType').value, name: dish, ings: ings });
         save(); renderAll();
         document.getElementById('dishName').value = ''; document.getElementById('ingList').innerHTML = ''; addIngRow();
+        cuteAlert(`🍽️ 记录好啦！[${dish}] 一定很好吃吧~ 吸溜 (*^▽^*)`);
     }
+
+    // ✨ 找回可爱的确认弹窗
+    function deleteStock(n) { if(confirm(`(・_・) 确定要把冰箱里的 [${n}] 全部清空吗？`)) { delete data.stock[n]; save(); renderAll(); renderFridgeBlocks(); } }
+    function deleteMeal(id) { if(confirm(`(qwq) 确定要擦掉这条用餐记录吗？`)) { data.meals = data.meals.filter(m => m.id !== id); save(); renderAll(); } }
 
     function renderAll() {
         let sList = document.getElementById('stockList'); sList.innerHTML = '';
@@ -241,6 +268,7 @@
         let y = curDate.getFullYear(), m = curDate.getMonth();
         document.getElementById('monthTitle').innerText = `${y}年 ${m+1}月`;
         let grid = document.getElementById('calendarGrid'); grid.innerHTML = '';
+        ['日','一','二','三','四','五','六'].forEach(d => grid.innerHTML+=`<div style="text-align:center;color:#bcaaa4;font-size:0.8em">${d}</div>`);
         let days = new Date(y, m+1, 0).getDate(); let first = new Date(y, m, 1).getDay();
         for(let i=0;i<first;i++) grid.innerHTML+=`<div></div>`;
         for(let d=1; d<=days; d++) {
@@ -271,14 +299,14 @@
         zone.onclick = () => { if(selectedBlock) { zone.appendChild(selectedBlock); let name = selectedBlock.innerText; data.stock[name].loc = zone.id==='zone-unsorted'?'':zone.id; save(); selectedBlock.classList.remove('selected'); selectedBlock = null; } };
     });
 
-    // ✨ 核心联想逻辑回归
+    // ✨ 核心联想逻辑 (修正：i-unit 改回可读取)
     function addIngRow() {
         let d = document.createElement('div'); d.className='ing-row';
         d.innerHTML = `
-            <input class="i-name" placeholder="食材" list="historyList" onchange="fillUnit(this)" style="flex:1.5">
+            <input class="i-name" placeholder="食材名" list="historyList" onchange="fillUnit(this)" style="flex:1.5">
             <input type="number" class="i-qty" placeholder="量" style="flex:0.8">
-            <input class="i-unit" placeholder="单位" style="flex:0.6">
-            <button class="btn-del-mini" onclick="this.parentElement.remove()">×</button>`;
+            <input class="i-unit" placeholder="单位" style="flex:0.6" readonly>
+            <button class="btn-del-mini" onclick="this.parentElement.remove()" style="background:#ef9a9a;color:white">×</button>`;
         document.getElementById('ingList').appendChild(d);
     }
     
@@ -288,10 +316,26 @@
         }
     }
 
-    function deleteStock(n) { if(confirm(`吃光光 ${n}？`)) { delete data.stock[n]; save(); renderAll(); } }
-    function deleteMeal(id) { if(confirm(`删除记录？`)) { data.meals = data.meals.filter(m => m.id !== id); save(); renderAll(); } }
-    function exportData() { let blob = new Blob([JSON.stringify(data)], {type: "application/json"}); let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `饮食备份_${new Date().toISOString().slice(0,10)}.json`; a.click(); cuteAlert("📦 数据已打包！"); }
-    function importData(input) { let reader = new FileReader(); reader.onload = (e) => { data = JSON.parse(e.target.result); save(); renderAll(); cuteAlert("🎉 恢复成功！"); }; reader.readAsText(input.files[0]); }
+    // ✨ 找回可爱的备份/恢复弹窗
+    function exportData() { 
+        let blob = new Blob([JSON.stringify(data)], {type: "application/json"}); 
+        let a = document.createElement('a'); a.href = URL.createObjectURL(blob); 
+        let date = new Date().toISOString().slice(0,10);
+        a.download = `宝宝饮食备份_${date}.json`; 
+        a.click(); 
+        cuteAlert("📦 数据已打包带走啦！请收好哦 (ﾉ>ω<)ﾉ"); 
+    }
+    function importData(input) { 
+        if(!confirm("⚠️ 警告：导入数据会覆盖当前的记录哦！\n确定要继续吗？(°ー°〃)")) { input.value = ''; return; }
+        let reader = new FileReader(); 
+        reader.onload = (e) => { 
+            try {
+                data = JSON.parse(e.target.result); save(); renderAll(); 
+                cuteAlert("🎉 数据恢复成功！欢迎回家~ (*^▽^*)"); 
+            } catch(err) { cuteAlert("读取失败啦，是不是拿错文件了？"); }
+        }; 
+        reader.readAsText(input.files[0]); 
+    }
 </script>
 </body>
 </html>
