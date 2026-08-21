@@ -202,12 +202,12 @@
     </div>
 </div>
 
-   <!-- 1. 引入 Firebase CDN -->
+ <!-- 引入 Firebase 脚本 -->
 <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js"></script>
 
 <script>
-  // ========= 1. Firebase 配置与初始化 =========
+  // ========= 1. Firebase 初始化与配置 =========
   const firebaseConfig = {
     apiKey: "AIzaSyDWew9lNxxJszHrDInouE1ZCMv1k5Y9b4o",
     authDomain: "gen-lang-client-0138974029.firebaseapp.com",
@@ -224,33 +224,35 @@
   const db = firebase.database();
   const syncRef = db.ref('my_food_book_data/food_v5_data');
 
-  // ========= 2. 原全局变量 =========
+  // ========= 2. 全局状态与变量 =========
   const KEY = 'food_v5_data';
   let data = { stock: {}, meals: [] };
   let curDate = new Date();
   let selectedBlock = null;
   let isRemoteUpdating = false;
 
-  // ========= 3. 增强版保存函数（本地 + 云端双写） =========
-  function saveData(skipCloud = false) {
+  // ========= 3. 本地与云端数据保存 =========
+  function save(skipCloud = false) {
     localStorage.setItem(KEY, JSON.stringify(data));
     if (!skipCloud && !isRemoteUpdating) {
       syncRef.set(JSON.stringify(data)).catch(err => {
-        console.warn("云端同步失败，请检查网络或Firebase规则:", err);
+        console.warn("云端同步失败:", err);
       });
     }
   }
 
-  // ========= 4. 云端数据实时监听 =========
+  // ========= 4. 监听 Firebase 云端实时同步 =========
   syncRef.on('value', (snapshot) => {
     const remoteVal = snapshot.val();
     if (remoteVal) {
-      // 云端有数据，拉取并更新本地
       try {
         const parsed = typeof remoteVal === 'string' ? JSON.parse(remoteVal) : remoteVal;
-        if (parsed && parsed.stock) {
+        if (parsed && typeof parsed === 'object') {
           isRemoteUpdating = true;
-          data = parsed;
+          data = {
+            stock: parsed.stock || {},
+            meals: Array.isArray(parsed.meals) ? parsed.meals : []
+          };
           localStorage.setItem(KEY, JSON.stringify(data));
           renderAll();
           isRemoteUpdating = false;
@@ -259,7 +261,7 @@
         console.error("解析云端数据出错:", e);
       }
     } else {
-      // 云端为空（第一次使用），自动将当前本地已有数据推送到云端
+      // 若云端尚无数据，自动推送本地已有数据
       const localSaved = localStorage.getItem(KEY);
       if (localSaved) {
         syncRef.set(localSaved);
@@ -267,129 +269,250 @@
     }
   });
 
-  // ========= 5. 页面初始化 =========
+  // ========= 5. 原系统核心业务功能函数 =========
   window.onload = function() {
-    try { 
-      let saved = localStorage.getItem(KEY); 
-      if(saved) data = JSON.parse(saved); 
-      if(!data.stock) data.stock = {}; 
-      if(!data.meals) data.meals = []; 
+    try {
+      let saved = localStorage.getItem(KEY);
+      if (saved) data = JSON.parse(saved);
+      if (!data.stock) data.stock = {};
+      if (!data.meals) data.meals = [];
     } catch(e) {}
 
-    document.getElementById('cookDate').valueAsDate = new Date();
-    addingRow(); 
-    renderAll();
+    const cookDateInput = document.getElementById('cookDate');
+    if (cookDateInput) cookDateInput.valueAsDate = new Date();
     
-    document.getElementById('systemStatus').innerText = " 云端实时同步已就绪 | 食材名字全都能看清啦！";
+    addingRow();
+    renderAll();
+
+    const statusEl = document.getElementById('systemStatus');
+    if (statusEl) statusEl.innerText = " 云端实时同步已就绪 | 食材名字全都能看清啦！";
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
   };
+
+  function selectBlock(id) {
+    selectedBlock = id;
+    document.querySelectorAll('.zone').forEach(el => el.classList.remove('active'));
+    const target = document.getElementById(id);
+    if (target) target.classList.add('active');
     
-<script>
-    const KEY = 'food_v5_data'; 
-    let data = { stock: {}, meals: [] };
-    let curDate = new Date();
-    let selectedBlock = null; 
+    const label = target ? target.getAttribute('data-label') : id;
+    const nameEl = document.getElementById('selectedZoneName');
+    if (nameEl) nameEl.innerText = label;
+    
+    renderStockList();
+  }
 
-    window.onload = function() {
-        try { let saved = localStorage.getItem(KEY); if(saved) data = JSON.parse(saved); if(!data.stock) data.stock = {}; if(!data.meals) data.meals = []; } catch(e) {}
-        document.getElementById('cookDate').valueAsDate = new Date();
-        addIngRow(); renderAll();
-        document.getElementById('systemStatus').innerText = "✅ V8.1 全显版 | 食材名字全都能看清啦！";
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
-    };
+  function saveStock() {
+    if (!selectedBlock) {
+      alert("请先点击左侧或上方的冰箱格子选择存放位置！");
+      return;
+    }
+    const name = document.getElementById('ingName').value.trim();
+    const count = parseFloat(document.getElementById('ingCount').value);
+    const unit = document.getElementById('ingUnit').value;
 
-    function cuteAlert(msg) { alert(msg); }
-    function save() { localStorage.setItem(KEY, JSON.stringify(data)); }
-
-    function doBuy() {
-        let n = document.getElementById('buyName').value; let q = parseFloat(document.getElementById('buyQty').value);
-        let u = document.getElementById('buyUnit').value;
-        if(!n || isNaN(q)) return cuteAlert("还没填完整哦~ (＞﹏＜)");
-        if(!data.stock[n]) data.stock[n] = {q:0, u:u, loc:''}; 
-        data.stock[n].q += q; data.stock[n].u = u;
-        save(); renderAll(); document.getElementById('buyQty').value = '';
-        if(document.getElementById('fridgeOverlay').style.display === 'flex') renderFridgeBlocks();
-        cuteAlert(`✨ 成功！冰箱里多了 ${q}${u} [${n}]！(≧∇≦)ﾉ`);
+    if (!name || isNaN(count) || count <= 0) {
+      alert("请输入正确的食材名称和数量！");
+      return;
     }
 
-    function doCook() {
-        let dish = document.getElementById('dishName').value; if(!dish) return cuteAlert("这顿美味叫什么？(O_O)?");
-        let ings = []; document.querySelectorAll('.ing-row').forEach(row => {
-            let n = row.querySelector('.i-name').value; let q = parseFloat(row.querySelector('.i-qty').value);
-            if(n && q) ings.push({n, q, u: row.querySelector('.i-unit').value});
-        });
-        ings.forEach(i => { if(data.stock[i.n]) data.stock[i.n].q -= i.q; });
-        data.meals.push({ id: Date.now(), date: document.getElementById('cookDate').value, type: document.getElementById('mealType').value, name: dish, ings: ings });
-        save(); renderAll();
-        document.getElementById('dishName').value = ''; document.getElementById('ingList').innerHTML = ''; addIngRow();
-        cuteAlert(`🍽️ 做好啦！[${dish}] 一定超级好恰！吸溜~ (*^▽^*)`);
+    if (!data.stock[name]) {
+      data.stock[name] = { count: count, unit: unit, loc: selectedBlock };
+    } else {
+      data.stock[name].count += count;
+      data.stock[name].loc = selectedBlock;
+      data.stock[name].unit = unit;
     }
 
-    function renderAll() {
-        let sList = document.getElementById('stockList'); sList.innerHTML = '';
-        Object.keys(data.stock).sort().forEach(k => {
-            let item = data.stock[k]; if(item.q !== 0) {
-                sList.innerHTML += `<div class="stock-item"><div><b>${k}</b> <span style="font-size:0.7em;color:#aaa">(${item.loc?'✅':'🛒'})</span></div><div>${parseFloat(item.q.toFixed(2))} ${item.u}<button class="btn-del-mini" onclick="deleteStock('${k}')">×</button></div></div>`;
-            }
-        });
-        let mList = document.getElementById('mealLogList'); mList.innerHTML = '';
-        [...data.meals].sort((a,b)=>b.id-a.id).slice(0,10).forEach(m => {
-            let t={breakfast:'早',lunch:'午',dinner:'晚'};
-            mList.innerHTML += `<div class="log-item"><div><span style="color:#aaa">${m.date.slice(5)}</span> <span class="dish-tag meal-${m.type}">${t[m.type]}</span> ${m.name}</div><button class="btn-del-mini" onclick="deleteMeal(${m.id})">×</button></div>`;
-        });
-        renderCalendar();
+    save();
+    renderAll();
+    document.getElementById('ingName').value = '';
+    document.getElementById('ingCount').value = '';
+  }
+
+  function addingRow() {
+    const container = document.getElementById('ingRows');
+    if (!container) return;
+    const row = document.createElement('div');
+    row.className = 'ing-row';
+    
+    let options = '<option value="">-- 选择食材 --</option>';
+    for (let k in data.stock) {
+      if (data.stock[k].count > 0) {
+        options += `<option value="${k}">${k} (余${data.stock[k].count}${data.stock[k].unit || ''})</option>`;
+      }
     }
 
-    function renderCalendar() {
-        let y = curDate.getFullYear(), m = curDate.getMonth();
-        document.getElementById('monthTitle').innerText = `${y}年 ${m+1}月`;
-        let grid = document.getElementById('calendarGrid'); grid.innerHTML = '';
-        let days = new Date(y, m+1, 0).getDate(); let first = new Date(y, m, 1).getDay();
-        ['日','一','二','三','四','五','六'].forEach(d => grid.innerHTML+=`<div style="text-align:center;color:#bcaaa4;font-size:0.8em">${d}</div>`);
-        for(let i=0;i<first;i++) grid.innerHTML+=`<div></div>`;
-        for(let d=1; d<=days; d++) {
-            let dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            let meals = data.meals.filter(x => x.date === dStr);
-            let html = meals.map(x => {
-                let ingInfo = x.ings.map(i => `${i.n}(${i.q}${i.u})`).join('、');
-                let t = {breakfast:'早餐', lunch:'午餐', dinner:'晚餐'};
-                let clickMsg = `${t[x.type]}：${x.name}\\n食材：${ingInfo || '没记食材哦T^T'}`;
-                return `<span class="dish-tag meal-${x.type}" onclick="alert('${clickMsg}')">${x.name}</span>`;
-            }).join('');
-            grid.innerHTML += `<div class="day-cell ${dStr===new Date().toISOString().split('T')[0]?'today':''}"><div class="day-num">${d}</div><div class="day-content">${html}</div></div>`;
+    row.innerHTML = `
+      <select class="ing-select" onchange="onIngSelectChange(this)">${options}</select>
+      <input type="number" class="ing-consume-count" placeholder="用量" min="0.1" step="0.1">
+      <span class="ing-unit-label" style="min-width:30px;font-size:12px;color:#666;">单位</span>
+      <button type="button" onclick="this.parentElement.remove()" style="padding:4px 8px;background:#f56c6c;color:white;border:none;border-radius:4px;cursor:pointer;">×</button>
+    `;
+    container.appendChild(row);
+  }
+
+  function onIngSelectChange(selectEl) {
+    const row = selectEl.parentElement;
+    const val = selectEl.value;
+    const unitLabel = row.querySelector('.ing-unit-label');
+    if (val && data.stock[val]) {
+      unitLabel.innerText = data.stock[val].unit || '';
+    } else {
+      unitLabel.innerText = '单位';
+    }
+  }
+
+  function recordMeal() {
+    const title = document.getElementById('mealTitle').value.trim();
+    const dateVal = document.getElementById('cookDate').value;
+    const rows = document.querySelectorAll('.ing-row');
+    
+    if (!title) {
+      alert("请输入餐品名称！");
+      return;
+    }
+
+    let consumed = [];
+    for (let r of rows) {
+      const select = r.querySelector('.ing-select');
+      const countInput = r.querySelector('.ing-consume-count');
+      if (select && select.value && countInput && countInput.value) {
+        const ingName = select.value;
+        const cnt = parseFloat(countInput.value);
+        if (cnt > 0) {
+          consumed.push({ name: ingName, count: cnt, unit: data.stock[ingName]?.unit || '' });
+          if (data.stock[ingName]) {
+            data.stock[ingName].count = Math.max(0, data.stock[ingName].count - cnt);
+          }
         }
+      }
     }
 
-    function moveMonth(n) { curDate.setMonth(curDate.getMonth()+n); renderAll(); }
-    function openFridge() { document.getElementById('fridgeOverlay').style.display = 'flex'; renderFridgeBlocks(); }
-    function closeFridge() { document.getElementById('fridgeOverlay').style.display = 'none'; renderAll(); }
-
-    function renderFridgeBlocks() {
-        document.querySelectorAll('.zone').forEach(z => { if(z.id !== 'zone-unsorted') z.innerHTML = ''; });
-        document.getElementById('zone-unsorted').innerHTML = '<div class="grocery-label">🛒 待整理区</div>';
-        Object.keys(data.stock).forEach(name => {
-            if(data.stock[name].q <= 0) return;
-            let block = document.createElement('div'); block.className = 'food-block'; block.innerText = name;
-            block.onclick = (e) => { e.stopPropagation(); if(selectedBlock) selectedBlock.classList.remove('selected'); selectedBlock = block; block.classList.add('selected'); };
-            let target = document.getElementById(data.stock[name].loc || 'zone-unsorted');
-            if(target) target.appendChild(block);
-        });
-    }
-
-    document.querySelectorAll('.zone').forEach(zone => {
-        zone.onclick = () => { if(selectedBlock) { zone.appendChild(selectedBlock); let name = selectedBlock.innerText; data.stock[name].loc = zone.id==='zone-unsorted'?'':zone.id; save(); selectedBlock.classList.remove('selected'); selectedBlock = null; } };
+    data.meals.unshift({
+      id: Date.now(),
+      title: title,
+      date: dateVal || new Date().toISOString().split('T')[0],
+      ingredients: consumed
     });
 
-    function addIngRow() {
-        let d = document.createElement('div'); d.className='ing-row';
-        d.innerHTML = `<input class="i-name" placeholder="食材名" list="historyList" onchange="fillUnit(this)" style="flex:1.5"><input type="number" class="i-qty" placeholder="量" style="flex:0.8"><input class="i-unit" placeholder="单位" style="flex:0.6" readonly><button class="btn-del-mini" onclick="this.parentElement.remove()" style="background:#ef9a9a;color:white">×</button>`;
-        document.getElementById('ingList').appendChild(d);
+    save();
+    renderAll();
+
+    document.getElementById('mealTitle').value = '';
+    document.getElementById('ingRows').innerHTML = '';
+    addingRow();
+  }
+
+  function changeDate(days) {
+    curDate.setDate(curDate.getDate() + days);
+    renderDietHistory();
+  }
+
+  function deleteStockItem(name) {
+    if (confirm(`确定删除食材 ${name} 吗？`)) {
+      delete data.stock[name];
+      save();
+      renderAll();
     }
-    function fillUnit(i) { if(data.stock[i.value]) i.parentElement.querySelector('.i-unit').value = data.stock[i.value].u; }
-    function deleteStock(n) { if(confirm(`(・_・) 确定要把冰箱里的 [${n}] 全部清空吗？`)) { delete data.stock[n]; save(); renderAll(); renderFridgeBlocks(); } }
-    function deleteMeal(id) { if(confirm(`(qwq) 确定要擦掉这条用餐记录吗？`)) { data.meals = data.meals.filter(m => m.id !== id); save(); renderAll(); } }
-    function exportData() { let blob = new Blob([JSON.stringify(data)], {type: "application/json"}); let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `宝宝饮食备份_${new Date().toISOString().slice(0,10)}.json`; a.click(); alert("📦 数据已打包带走啦！请收好哦 (ﾉ>ω<)ﾉ"); }
-    function importData(input) { if(!confirm("⚠️ 警告：导入会覆盖当前数据哦！确定吗？")) return; let reader = new FileReader(); reader.onload = (e) => { data = JSON.parse(e.target.result); save(); renderAll(); alert("🎉 恢复成功！欢迎回家~ (*^▽^*)"); }; reader.readAsText(input.files[0]); }
+  }
+
+  function deleteMeal(id) {
+    if (confirm("确定删除这条饮食记录吗？")) {
+      data.meals = data.meals.filter(m => m.id !== id);
+      save();
+      renderAll();
+    }
+  }
+
+  // ========= 6. 渲染视图函数 =========
+  function renderAll() {
+    renderFridgeGrids();
+    renderStockList();
+    renderDietHistory();
+    updateAllIngSelects();
+  }
+
+  function renderFridgeGrids() {
+    document.querySelectorAll('.zone').forEach(el => {
+      const zoneId = el.id;
+      const label = el.getAttribute('data-label') || zoneId;
+      let count = 0;
+      for (let k in data.stock) {
+        if (data.stock[k].loc === zoneId && data.stock[k].count > 0) {
+          count++;
+        }
+      }
+      el.innerHTML = `<span class="zone-title">${label}</span><span class="zone-badge">${count}种</span>`;
+    });
+  }
+
+  function renderStockList() {
+    const listEl = document.getElementById('stockList');
+    if (!listEl) return;
+    listEl.innerHTML = '';
+
+    for (let k in data.stock) {
+      const item = data.stock[k];
+      if (selectedBlock && item.loc !== selectedBlock) continue;
+      if (item.count <= 0) continue;
+
+      const card = document.createElement('div');
+      card.className = 'stock-item-tag';
+      card.innerHTML = `
+        <span class="st-name">${k}</span>
+        <span class="st-count">${item.count} ${item.unit || ''}</span>
+        <button class="st-del" onclick="deleteStockItem('${k}')">×</button>
+      `;
+      listEl.appendChild(card);
+    }
+  }
+
+  function renderDietHistory() {
+    const historyEl = document.getElementById('dietHistory');
+    if (!historyEl) return;
+    historyEl.innerHTML = '';
+
+    const dateStr = curDate.toISOString().split('T')[0];
+    const curDateEl = document.getElementById('curDateDisplay');
+    if (curDateEl) curDateEl.innerText = dateStr;
+
+    const todayMeals = data.meals.filter(m => m.date === dateStr);
+    if (todayMeals.length === 0) {
+      historyEl.innerHTML = '<div style="color:#999;font-size:13px;text-align:center;padding:12px;">当天暂无记录</div>';
+      return;
+    }
+
+    todayMeals.forEach(m => {
+      const item = document.createElement('div');
+      item.className = 'meal-record-card';
+      const ings = m.ingredients.map(i => `${i.name} × ${i.count}${i.unit}`).join(', ');
+      item.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <strong style="font-size:14px;color:#333;">${m.title}</strong>
+          <button onclick="deleteMeal(${m.id})" style="border:none;background:transparent;color:#999;cursor:pointer;font-size:16px;">×</button>
+        </div>
+        <div style="font-size:12px;color:#666;margin-top:4px;">${ings ? '消耗: ' + ings : '无消耗食材'}</div>
+      `;
+      historyEl.appendChild(item);
+    });
+  }
+
+  function updateAllIngSelects() {
+    document.querySelectorAll('.ing-row').forEach(row => {
+      const select = row.querySelector('.ing-select');
+      if (!select) return;
+      const currentVal = select.value;
+      let options = '<option value="">-- 选择食材 --</option>';
+      for (let k in data.stock) {
+        if (data.stock[k].count > 0) {
+          options += `<option value="${k}">${k} (余${data.stock[k].count}${data.stock[k].unit || ''})</option>`;
+        }
+      }
+      select.innerHTML = options;
+      select.value = currentVal;
+    });
+  }
 </script>
 </body>
 </html>
