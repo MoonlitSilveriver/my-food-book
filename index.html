@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
+     <meta charset="UTF-8">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>566今天吃什么</title>
     
@@ -308,6 +311,90 @@
     function deleteMeal(id) { if(confirm(`(qwq) 确定要擦掉这条用餐记录吗？`)) { data.meals = data.meals.filter(m => m.id !== id); save(); renderAll(); } }
     function exportData() { let blob = new Blob([JSON.stringify(data)], {type: "application/json"}); let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `宝宝饮食备份_${new Date().toISOString().slice(0,10)}.json`; a.click(); alert("📦 数据已打包带走啦！请收好哦 (ﾉ>ω<)ﾉ"); }
     function importData(input) { if(!confirm("⚠️ 警告：导入会覆盖当前数据哦！确定吗？")) return; let reader = new FileReader(); reader.onload = (e) => { data = JSON.parse(e.target.result); save(); renderAll(); alert("🎉 恢复成功！欢迎回家~ (*^▽^*)"); }; reader.readAsText(input.files[0]); }
+document.addEventListener('DOMContentLoaded', () => {
+    const syncBtn = document.getElementById('cloudSyncBtn');
+    const modal = document.getElementById('firebaseConfigModal');
+    const saveBtn = document.getElementById('saveConfigBtn');
+    const closeBtn = document.getElementById('closeModalBtn');
+    const configInput = document.getElementById('firebaseConfigInput');
+
+    // 1. 弹窗交互逻辑
+    syncBtn.addEventListener('click', () => modal.style.display = 'block');
+    closeBtn.addEventListener('click', () => modal.style.display = 'none');
+
+    // 2. 检查本地是否已有配置，若有则自动静默连接
+    const savedConfig = localStorage.getItem('dietDiary_FirebaseConfig');
+    if (savedConfig) {
+        initFirebaseAndSync(JSON.parse(savedConfig));
+    }
+
+    // 3. 处理用户粘贴的配置并保存
+    saveBtn.addEventListener('click', () => {
+        try {
+            const rawText = configInput.value;
+            // 使用正则提取 {} 里面的核心 JSON/Object 结构
+            const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+            
+            if (!jsonMatch) {
+                throw new Error("未识别到有效的配置结构");
+            }
+
+            // 安全解析：将 Firebase 控制台复制的 JS 对象格式转换为合法的 JSON
+            // （因为控制台复制的代码通常键名没有双引号，不能直接 JSON.parse）
+            const configObj = new Function('return ' + jsonMatch[0])();
+
+            // 存入本地，下次打开网页自动读取
+            localStorage.setItem('dietDiary_FirebaseConfig', JSON.stringify(configObj));
+            
+            // 初始化 Firebase
+            initFirebaseAndSync(configObj);
+            
+            modal.style.display = 'none';
+            alert("✨ 云端同步配置成功！");
+            
+        } catch (e) {
+            alert("配置解析失败，请确保粘贴了完整的 config 代码块哦。");
+            console.error("解析错误:", e);
+        }
+    });
+});
+
+// 4. 初始化 Firebase 并在此处桥接你原本的保存逻辑
+function initFirebaseAndSync(config) {
+    if (!firebase.apps.length) {
+        firebase.initializeApp(config);
+    }
+    const db = firebase.firestore();
+    console.log("Firebase 数据库已连接成功！");
+    
+    // UI 变化：按钮变成已连接状态
+    const syncBtn = document.getElementById('cloudSyncBtn');
+    syncBtn.textContent = "✅ 云端已连接";
+    syncBtn.style.backgroundColor = "#2196F3";
+
+    // ---------------------------------------------------------
+    // 【同步逻辑接口区】宝宝大人可以在这里对接原本的方法：
+    // 例如，每次你原本调用 saveToLocalStorage() 的时候，
+    // 在这里加一行：db.collection('my_diet_diary').doc('latest').set(你的数据对象)
+    // ---------------------------------------------------------
+}
 </script>
+    <!-- 云端同步悬浮按钮 -->
+<button id="cloudSyncBtn" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000; padding: 10px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 20px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
+    ☁️ 连接云端同步
+</button>
+
+<!-- Firebase 配置输入弹窗 (默认隐藏) -->
+<div id="firebaseConfigModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1001;">
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 12px; width: 80%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+        <h3 style="margin-top: 0;">配置 Firebase 同步</h3>
+        <p style="font-size: 12px; color: #666;">请将 Firebase 控制台提供的 <b>firebaseConfig</b> 对象代码直接粘贴在下方：</p>
+        <textarea id="firebaseConfigInput" style="width: 100%; height: 150px; padding: 10px; border: 1px solid #ccc; border-radius: 6px; resize: none; font-family: monospace;" placeholder="const firebaseConfig = {&#10;  apiKey: '...',&#10;  authDomain: '...',&#10;  ...&#10;};"></textarea>
+        <div style="margin-top: 15px; display: flex; justify-content: flex-end; gap: 10px;">
+            <button id="closeModalBtn" style="padding: 8px 15px; border: none; border-radius: 6px; cursor: pointer; background: #eee;">取消</button>
+            <button id="saveConfigBtn" style="padding: 8px 15px; border: none; border-radius: 6px; cursor: pointer; background: #2196F3; color: white;">保存并连接</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>
