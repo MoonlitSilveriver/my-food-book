@@ -202,6 +202,75 @@
     </div>
 </div>
 
+    <!-- 1. 引入 Firebase 脚本 (Compat CDN) -->
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js"></script>
+
+<!-- 2. 无侵入透明同步中间件 -->
+<script>
+  // 填入您在 Firebase 控制台获取的配置
+  const firebaseConfig = {
+    apiKey: "AIzaSyDWew9lNxxJszHrDInouE1ZCMv1k5Y9b4o"
+    authDomain: "gen-lang-client-0138974029.firebaseapp.com"
+    databaseURL: "https://gen-lang-client-0138974029-default-rtdb.firebaseio.com"
+    projectId: "gen-lang-client-0138974029"
+    storageBucket: "gen-lang-client-0138974029.firebasestorage.app"
+    messagingSenderId: "40265472206"
+    appId: "1:40265472206:web:74b519d2ac4919cfd9189f"
+  };
+
+  // 初始化 Firebase
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  const db = firebase.database();
+  const syncRef = db.ref('my_food_book_data');
+
+  let isRemoteUpdating = false;
+
+  // A. 拦截原代码的所有 localStorage.setItem 写入，自动上传到云端
+  const originalSetItem = localStorage.setItem.bind(localStorage);
+  localStorage.setItem = function(key, value) {
+    originalSetItem(key, value);
+    // 只有非云端下发触发的本地修改，才推送至云端，避免死循环
+    if (!isRemoteUpdating) {
+      syncRef.child(key).set(value);
+    }
+  };
+
+  const originalRemoveItem = localStorage.removeItem.bind(localStorage);
+  localStorage.removeItem = function(key) {
+    originalRemoveItem(key);
+    if (!isRemoteUpdating) {
+      syncRef.child(key).remove();
+    }
+  };
+
+  // B. 监听云端变动，若其他设备更新了数据，自动同步至本地
+  syncRef.on('value', (snapshot) => {
+    const data = snapshot.val();
+    if (!data) return;
+
+    let hasChanged = false;
+    isRemoteUpdating = true;
+    
+    Object.keys(data).forEach((key) => {
+      const remoteVal = data[key];
+      if (localStorage.getItem(key) !== remoteVal) {
+        originalSetItem(key, remoteVal);
+        hasChanged = true;
+      }
+    });
+
+    isRemoteUpdating = false;
+
+    // 如果远端有新数据且页面已加载，触发页面视图刷新
+    if (hasChanged && typeof window.renderAll === 'function') {
+      window.renderAll();
+    }
+  });
+</script>
+    
 <script>
     const KEY = 'food_v5_data'; 
     let data = { stock: {}, meals: [] };
